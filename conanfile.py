@@ -4,8 +4,8 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 class TensorCompilerRecipe(ConanFile):
     name = "TensorCompiler"
     version = "1.0"
-    
     settings = "os", "compiler", "build_type", "arch"
+    generators = "CMakeDeps"
     
     def requirements(self):
         self.requires("onnx/1.20.0")
