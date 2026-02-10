@@ -25,7 +25,7 @@
 6. Run <br>
     <code>./build/Release/TensorCompiler/tensor_compiler \<program\></code>
 
-<p align="center"><img src="https://github.com/baitim/TensorCompiler/blob/main/images/rabbit.gif" width="50%"></p>
+<p align="center"><img src="https://github.com/baitim/TensorCompiler/blob/main/images/cat.gif" width="50%"></p>
 
 ## Support
 **This project is created by [baitim](https://t.me/bai_tim)**
