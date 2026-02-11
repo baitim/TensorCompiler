@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.11)
 project(tensor_compiler)
 
 find_package(ONNX REQUIRED)
-find_package(protobuf REQUIRED)
 
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -24,7 +23,6 @@ target_include_directories(Common PUBLIC
 target_link_libraries(Common
     PUBLIC
     onnx::onnx
-    protobuf::libprotobuf
 )
 
 

@@ -2,8 +2,7 @@
 
 namespace tc {
 
-Attribute* Node::create_attribute(const std::string& name,
-                                  const onnx::AttributeProto& attr_proto) {
+Attribute* Node::create_attribute(const std::string& name, const onnx::AttributeProto& attr_proto) {
     Attribute attr;
     attr.name = name;
 

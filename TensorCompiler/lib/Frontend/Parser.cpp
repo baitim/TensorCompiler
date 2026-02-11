@@ -42,7 +42,7 @@ void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::Graph
 
         Tensor* tensor = graph.create_tensor_with_data(tensor_name, shape, dtype);
         tensor->is_initializer = true;
-        graph.initializers.push_back(tensor);
+        graph.add_initializer(tensor);
     }
 }
 
@@ -75,7 +75,7 @@ void ONNXParser::parse_inputs(ComputationalGraph& graph, const onnx::GraphProto&
             }
         }
 
-        graph.input_tensors.push_back(tensor);
+        graph.add_input_tensor(tensor);
     }
 }
 
@@ -86,7 +86,7 @@ void ONNXParser::parse_outputs(ComputationalGraph& graph, const onnx::GraphProto
         Tensor* tensor = graph.get_tensor(tensor_name);
         if (!tensor)
             tensor = graph.create_tensor(tensor_name);
-        graph.output_tensors.push_back(tensor);
+        graph.add_output_tensor(tensor);
     }
 }
 
@@ -142,9 +142,9 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
 ComputationalGraph ONNXParser::parse(std::string_view model_path) {
     dbgs << "Parsing ONNX model from: " << model_path << std::endl;
 
-    std::ifstream file(model_path, std::ios::binary);
+    std::ifstream file(std::string(model_path), std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Failed to open ONNX file: " + model_path);
+        throw std::runtime_error("Failed to open ONNX file: " + std::string(model_path));
     }
 
     file.seekg(0, std::ios::end);
