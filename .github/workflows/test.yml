@@ -15,9 +15,6 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: install flex
-        run: sudo apt install flex libfl-dev
-
       - name: install uv
         uses: astral-sh/setup-uv@v5
 
@@ -59,9 +56,6 @@ jobs:
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
-
-      - name: install flex
-        run: sudo apt install flex libfl-dev
 
       - name: install uv
         uses: astral-sh/setup-uv@v5
