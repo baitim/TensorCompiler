@@ -14,6 +14,8 @@
 #define dbgs if (false) std::cout
 #endif
 
+namespace tc {
+
 enum class DataType {
     FLOAT, INT32, INT64, BOOL, STRING, UINT8, DOUBLE, UNKNOWN
 };
@@ -198,3 +200,5 @@ public:
 };
 
 void traverse_graph(ComputationalGraph& graph, GraphVisitor& visitor);
+
+}

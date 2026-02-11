@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
+namespace tc {
+
 void FloatAttrValue::print(std::ostream& os) const { os << value; }
 std::string FloatAttrValue::type_name() const { return "FLOAT"; }
 
@@ -143,4 +145,6 @@ void traverse_graph(ComputationalGraph& graph, GraphVisitor& visitor) {
         visitor.visit_tensor(entry.second);
     for (Node* node : graph.nodes)
         visitor.visit_node(node);
+}
+
 }

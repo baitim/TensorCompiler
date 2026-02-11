@@ -7,6 +7,8 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
+namespace tc::fe {
+
 DataType ONNXParser::convert_onnx_type(int32_t onnx_type) {
     switch(onnx_type) {
         case onnx::TensorProto_DataType_FLOAT: return DataType::FLOAT;
@@ -187,4 +189,6 @@ ComputationalGraph ONNXParser::parse_from_buffer(const std::vector<char>& buffer
 
     dbgs << "ONNX parsing completed successfully!" << std::endl;
     return graph;
+}
+
 }

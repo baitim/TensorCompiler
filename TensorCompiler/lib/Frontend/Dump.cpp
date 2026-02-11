@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
+namespace tc {
+
 static std::string op_type_to_string(OpType op_type) {
     switch(op_type) {
         case OpType::ADD: return "Add";
@@ -93,4 +95,6 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
             os << std::endl;
         }
     }
+}
+
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "Common.hpp"
 
+namespace tc::fe {
+
 class ONNXParser {
 public:
     ComputationalGraph parse(const std::string& model_path);
@@ -16,3 +18,5 @@ private:
 
     ComputationalGraph parse_from_buffer(const std::vector<char>& buffer);
 };
+
+}
