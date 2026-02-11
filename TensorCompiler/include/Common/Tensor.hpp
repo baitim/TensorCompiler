@@ -41,6 +41,10 @@ public:
                                     DataType dtype);
     Tensor* get_tensor(const std::string& name) const;
     size_t tensor_count() const;
+
+    void add_input_tensor(Tensor* t) { input_tensors.push_back(t); }
+    void add_output_tensor(Tensor* t) { output_tensors.push_back(t); }
+    void add_initializer(Tensor* t) { initializers.push_back(t); }
 };
 
 } // namespace tc

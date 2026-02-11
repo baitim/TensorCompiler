@@ -1,4 +1,5 @@
 #include "Frontend/Parser.hpp"
+#include <onnx/onnx_pb.h>
 #include <fstream>
 
 namespace tc::fe {
@@ -42,7 +43,7 @@ void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::Graph
 
         Tensor* tensor = graph.create_tensor_with_data(tensor_name, shape, dtype);
         tensor->is_initializer = true;
-        graph.initializers.push_back(tensor);
+        graph.add_initializer(tensor);
     }
 }
 
@@ -75,7 +76,7 @@ void ONNXParser::parse_inputs(ComputationalGraph& graph, const onnx::GraphProto&
             }
         }
 
-        graph.input_tensors.push_back(tensor);
+        graph.add_input_tensor(tensor);
     }
 }
 
@@ -86,7 +87,55 @@ void ONNXParser::parse_outputs(ComputationalGraph& graph, const onnx::GraphProto
         Tensor* tensor = graph.get_tensor(tensor_name);
         if (!tensor)
             tensor = graph.create_tensor(tensor_name);
-        graph.output_tensors.push_back(tensor);
+        graph.add_output_tensor(tensor);
+    }
+}
+
+void ONNXParser::parse_attributes(Node* node, const onnx::NodeProto& node_proto) {
+    for (int j = 0; j < node_proto.attribute_size(); ++j) {
+        const onnx::AttributeProto& attr_proto = node_proto.attribute(j);
+        std::unique_ptr<AttrValueBase> value;
+
+        switch (attr_proto.type()) {
+            case onnx::AttributeProto_AttributeType_FLOAT:
+                value = std::make_unique<FloatAttrValue>(attr_proto.f());
+                break;
+            case onnx::AttributeProto_AttributeType_INT:
+                value = std::make_unique<IntAttrValue>(static_cast<int64_t>(attr_proto.i()));
+                break;
+            case onnx::AttributeProto_AttributeType_STRING:
+                value = std::make_unique<StringAttrValue>(attr_proto.s());
+                break;
+            case onnx::AttributeProto_AttributeType_FLOATS: {
+                std::vector<float> floats;
+                floats.reserve(attr_proto.floats_size());
+                for (int k = 0; k < attr_proto.floats_size(); ++k)
+                    floats.push_back(attr_proto.floats(k));
+                value = std::make_unique<FloatsAttrValue>(floats);
+                break;
+            }
+            case onnx::AttributeProto_AttributeType_INTS: {
+                std::vector<int64_t> ints;
+                ints.reserve(attr_proto.ints_size());
+                for (int k = 0; k < attr_proto.ints_size(); ++k)
+                    ints.push_back(attr_proto.ints(k));
+                value = std::make_unique<IntsAttrValue>(ints);
+                break;
+            }
+            case onnx::AttributeProto_AttributeType_STRINGS: {
+                std::vector<std::string> strings;
+                strings.reserve(attr_proto.strings_size());
+                for (int k = 0; k < attr_proto.strings_size(); ++k)
+                    strings.push_back(attr_proto.strings(k));
+                value = std::make_unique<StringsAttrValue>(strings);
+                break;
+            }
+            default:
+                value = std::make_unique<IntAttrValue>(static_cast<int64_t>(0));
+                break;
+        }
+
+        node->add_attribute(attr_proto.name(), std::move(value));
     }
 }
 
@@ -131,20 +180,16 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
             }
         }
 
-        for (int j = 0; j < node_proto.attribute_size(); ++j) {
-            const onnx::AttributeProto& attr_proto = node_proto.attribute(j);
-            Attribute* attr = node->create_attribute(attr_proto.name(), attr_proto);
-            node->attributes[attr->name] = attr;
-        }
+        parse_attributes(node, node_proto);
     }
 }
 
 ComputationalGraph ONNXParser::parse(std::string_view model_path) {
     dbgs << "Parsing ONNX model from: " << model_path << std::endl;
 
-    std::ifstream file(model_path, std::ios::binary);
+    std::ifstream file(std::string(model_path), std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Failed to open ONNX file: " + model_path);
+        throw std::runtime_error("Failed to open ONNX file: " + std::string(model_path));
     }
 
     file.seekg(0, std::ios::end);

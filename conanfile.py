@@ -16,10 +16,7 @@ class TensorCompilerRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
-    requires = (
-        "onnx/1.20.0",
-        "protobuf/6.32.1"
-    )
+    requires = "onnx/1.20.0"
     test_requires = "gtest/1.15.0"
 
     exports_sources = "CMakeLists.txt", "TensorCompiler/*"

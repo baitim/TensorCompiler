@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.11)
 project(tensor_compiler)
 
 find_package(ONNX REQUIRED)
-find_package(protobuf REQUIRED)
 
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -21,13 +20,6 @@ target_include_directories(Common PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(Common
-    PUBLIC
-    onnx::onnx
-    protobuf::libprotobuf
-)
-
-
 # -------------- Frontend --------------
 
 set(FRONTEND_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Frontend)
@@ -42,6 +34,7 @@ target_include_directories(Frontend PUBLIC
 target_link_libraries(Frontend
     PUBLIC
     Common
+    onnx::onnx
 )
 
 # -------------- Execution -------------
