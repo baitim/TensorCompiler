@@ -7,7 +7,12 @@ find_package(protobuf REQUIRED)
 set(FRONTEND_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include/Frontend)
 set(FRONTEND_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Frontend)
 
-add_library(Frontend STATIC ${FRONTEND_LIB_DIR}/Frontend.cpp)
+add_library(Frontend STATIC 
+    ${FRONTEND_LIB_DIR}/Common.cpp
+    ${FRONTEND_LIB_DIR}/Parser.cpp
+    ${FRONTEND_LIB_DIR}/Dump.cpp
+)
+
 target_include_directories(Frontend PUBLIC
     $<BUILD_INTERFACE:${FRONTEND_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>

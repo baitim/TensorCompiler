@@ -1,4 +1,4 @@
-#include "Frontend.hpp"
+#include "Parser.hpp"
 #include <iostream>
 
 int main(int argc, char* argv[]) {
@@ -10,8 +10,8 @@ int main(int argc, char* argv[]) {
     std::string model_path = argv[1];
 
     try {
-        ONNXParser parser;
-        ComputationalGraph graph = parser.parse(model_path);
+        tc::fe::ONNXParser parser;
+        tc::ComputationalGraph graph = parser.parse(model_path);
         
         graph.print_detailed(std::cout);
         

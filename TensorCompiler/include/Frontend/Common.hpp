@@ -1,5 +1,4 @@
 #pragma once
-
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -14,6 +13,8 @@
 #else
 #define dbgs if (false) std::cout
 #endif
+
+namespace tc {
 
 enum class DataType {
     FLOAT, INT32, INT64, BOOL, STRING, UINT8, DOUBLE, UNKNOWN
@@ -94,8 +95,6 @@ private:
     std::vector<std::unique_ptr<AttrValueBase>> storage_;
 
 public:
-    AttributeStorage() = default;
-
     template <typename T, typename... Args>
     T* create(Args&&... args) {
         auto attr = std::make_unique<T>(std::forward<Args>(args)...);
@@ -139,8 +138,6 @@ private:
     std::vector<std::unique_ptr<Node>> node_storage_;
 
 public:
-    Storage() = default;
-
     template <typename... Args>
     Tensor* create_tensor(Args&&... args) {
         auto tensor = std::make_unique<Tensor>();
@@ -177,14 +174,6 @@ public:
     std::vector<Tensor*> output_tensors;
     std::vector<Tensor*> initializers;
 
-    ComputationalGraph(const ComputationalGraph&) = delete;
-    ComputationalGraph& operator=(const ComputationalGraph&) = delete;
-    
-    ComputationalGraph(ComputationalGraph&&) = default;
-    ComputationalGraph& operator=(ComputationalGraph&&) = default;
-
-    ComputationalGraph() = default;
-
     Tensor* create_tensor(const std::string& name);
     Tensor* create_tensor_with_data(const std::string& name, 
                                    const std::vector<int64_t>& shape,
@@ -210,20 +199,6 @@ public:
     virtual void visit_node(Node* node) = 0;
 };
 
-class ONNXParser {
-public:
-    ComputationalGraph parse(const std::string& model_path);
-
-private:
-    DataType convert_onnx_type(int32_t onnx_type);
-    OpType convert_op_type(const std::string& op_type_str);
-
-    void parse_initializers(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
-    void parse_inputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
-    void parse_outputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
-    void parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
-
-    ComputationalGraph parse_from_buffer(const std::vector<char>& buffer);
-};
-
 void traverse_graph(ComputationalGraph& graph, GraphVisitor& visitor);
+
+}
