@@ -20,12 +20,6 @@ target_include_directories(Common PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(Common
-    PUBLIC
-    onnx::onnx
-)
-
-
 # -------------- Frontend --------------
 
 set(FRONTEND_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Frontend)
@@ -40,6 +34,7 @@ target_include_directories(Frontend PUBLIC
 target_link_libraries(Frontend
     PUBLIC
     Common
+    onnx::onnx
 )
 
 # -------------- Execution -------------

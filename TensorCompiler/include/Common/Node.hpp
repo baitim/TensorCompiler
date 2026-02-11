@@ -16,7 +16,7 @@ struct Node {
     std::string domain = "";
 
 public:
-    Attribute* create_attribute(const std::string& name, const onnx::AttributeProto& attr_proto);
+    Attribute* add_attribute(const std::string& name, std::unique_ptr<AttrValueBase> value);
 };
 
 class NodeManager {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Graph.hpp"
+#include <onnx/onnx_pb.h>
 
 namespace tc::fe {
 
@@ -12,6 +13,7 @@ private:
     void parse_initializers(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
     void parse_inputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
     void parse_outputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
+    void parse_attributes(Node* node, const onnx::NodeProto& node_proto);
     void parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
 
     ComputationalGraph parse_from_buffer(const std::vector<char>& buffer);
