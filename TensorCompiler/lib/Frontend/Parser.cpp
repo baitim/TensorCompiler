@@ -1,11 +1,5 @@
-#include "Parser.hpp"
-#include <algorithm>
+#include "Frontend/Parser.hpp"
 #include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <onnx/onnx_pb.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/text_format.h>
 
 namespace tc::fe {
 
@@ -22,7 +16,7 @@ DataType ONNXParser::convert_onnx_type(int32_t onnx_type) {
     }
 }
 
-OpType ONNXParser::convert_op_type(const std::string& op_type_str) {
+OpType ONNXParser::convert_op_type(std::string_view op_type_str) {
     if (op_type_str == "Add") return OpType::ADD;
     if (op_type_str == "Mul") return OpType::MUL;
     if (op_type_str == "Conv") return OpType::CONV;
@@ -139,13 +133,13 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
 
         for (int j = 0; j < node_proto.attribute_size(); ++j) {
             const onnx::AttributeProto& attr_proto = node_proto.attribute(j);
-            Attribute attr = graph.create_attribute(attr_proto.name(), attr_proto);
-            node->attributes[attr.name] = std::move(attr);
+            Attribute* attr = node->create_attribute(attr_proto.name(), attr_proto);
+            node->attributes[attr->name] = attr;
         }
     }
 }
 
-ComputationalGraph ONNXParser::parse(const std::string& model_path) {
+ComputationalGraph ONNXParser::parse(std::string_view model_path) {
     dbgs << "Parsing ONNX model from: " << model_path << std::endl;
 
     std::ifstream file(model_path, std::ios::binary);
@@ -165,15 +159,13 @@ ComputationalGraph ONNXParser::parse(const std::string& model_path) {
 }
 
 ComputationalGraph ONNXParser::parse_from_buffer(const std::vector<char>& buffer) {
-    ComputationalGraph graph;
-
     onnx::ModelProto model;
     if (!model.ParseFromArray(buffer.data(), static_cast<int>(buffer.size()))) {
         throw std::runtime_error("Failed to parse ONNX model from buffer");
     }
 
     const onnx::GraphProto& onnx_graph = model.graph();
-    graph.name = onnx_graph.name();
+    ComputationalGraph graph(onnx_graph.name());
 
     dbgs << "Parsing initializers..." << std::endl;
     parse_initializers(graph, onnx_graph);
