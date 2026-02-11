@@ -4,6 +4,10 @@
 
  Implementation of the Tensor Compiler Frontend<br>
 
+## How to integrate
+ 
+ use [storage](https://github.com/baitim/TensorCompiler), project = "tensor_compiler", version = "1.0", user = "baitim"
+
 ## How to run
 
 1. Clone <br>
