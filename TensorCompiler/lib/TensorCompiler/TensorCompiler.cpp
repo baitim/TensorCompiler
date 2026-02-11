@@ -1,5 +1,4 @@
-#include "Parser.hpp"
-#include <iostream>
+#include "Frontend/Parser.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

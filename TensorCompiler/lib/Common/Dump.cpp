@@ -1,8 +1,4 @@
-#include "Common.hpp"
-#include <algorithm>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
+#include "Common/Graph.hpp"
 
 namespace tc {
 
@@ -34,7 +30,7 @@ static std::string dtype_to_string(DataType dtype) {
 
 void ComputationalGraph::print_summary(std::ostream& os) const {
     os << "=== Computational Graph Summary ===" << std::endl;
-    os << "Name: " << name << std::endl;
+    os << "Name: " << name_ << std::endl;
     os << "Nodes: " << node_count() << std::endl;
     os << "Tensors: " << tensor_count() << std::endl;
     os << "Input tensors: " << input_tensors.size() << std::endl;
@@ -90,11 +86,11 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
 
         os << "\n    Attributes (" << node->attributes.size() << "):" << std::endl;
         for (const auto& [name, attr] : node->attributes) {
-            os << "      " << name << " (" << attr.value->type_name() << "): ";
-            attr.value->print(os);
+            os << "      " << name << " (" << attr->value->type_name() << "): ";
+            attr->value->print(os);
             os << std::endl;
         }
     }
 }
 
-}
+} // namespace tc
