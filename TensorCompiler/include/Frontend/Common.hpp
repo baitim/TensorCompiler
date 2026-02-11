@@ -87,7 +87,7 @@ public:
 
 struct Attribute {
     std::string name;
-    std::unique_ptr<AttrValueBase> value;
+    AttrValueBase* value = nullptr;
 };
 
 class AttributeStorage {

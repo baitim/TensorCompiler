@@ -72,25 +72,25 @@ Attribute AttributeStorage::create_attribute(const std::string& name, const onnx
 
     switch (attr_proto.type()) {
         case onnx::AttributeProto_AttributeType_FLOAT:
-            attr.value.reset(create<FloatAttrValue>(attr_proto));
+            attr.value = create<FloatAttrValue>(attr_proto);
             break;
         case onnx::AttributeProto_AttributeType_INT:
-            attr.value.reset(create<IntAttrValue>(attr_proto));
+            attr.value = create<IntAttrValue>(attr_proto);
             break;
         case onnx::AttributeProto_AttributeType_STRING:
-            attr.value.reset(create<StringAttrValue>(attr_proto));
+            attr.value = create<StringAttrValue>(attr_proto);
             break;
         case onnx::AttributeProto_AttributeType_FLOATS:
-            attr.value.reset(create<FloatsAttrValue>(attr_proto));
+            attr.value = create<FloatsAttrValue>(attr_proto);
             break;
         case onnx::AttributeProto_AttributeType_INTS:
-            attr.value.reset(create<IntsAttrValue>(attr_proto));
+            attr.value = create<IntsAttrValue>(attr_proto);
             break;
         case onnx::AttributeProto_AttributeType_STRINGS:
-            attr.value.reset(create<StringsAttrValue>(attr_proto));
+            attr.value = create<StringsAttrValue>(attr_proto);
             break;
         default:
-            attr.value.reset(create<IntAttrValue>(static_cast<int64_t>(0)));
+            attr.value = create<IntAttrValue>(static_cast<int64_t>(0));
             break;
     }
     
