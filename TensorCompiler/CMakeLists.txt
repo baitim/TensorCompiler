@@ -13,7 +13,7 @@ target_include_directories(Frontend PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(Frontend
-    PRIVATE
+    PUBLIC
     onnx::onnx 
     protobuf::libprotobuf
 )
