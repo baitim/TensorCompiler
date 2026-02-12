@@ -22,6 +22,14 @@ public:
         return ptr;
     }
 
+    template<typename... Args>
+    T* create(Args&&... args) {
+        auto obj = std::make_unique<T>(std::forward<Args>(args)...);
+        T* ptr = obj.get();
+        storage_.push_back(std::move(obj));
+        return ptr;
+    }
+
     size_t count() const { return storage_.size(); }
     const std::vector<std::unique_ptr<T>>& get_all() const { return storage_; }
 };

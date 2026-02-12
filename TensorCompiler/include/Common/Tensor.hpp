@@ -24,6 +24,12 @@ struct Tensor {
     > data;
 
     bool is_initializer = false;
+
+public:
+    Tensor() = default;
+    Tensor(const std::string& name) : name(name) {}
+    Tensor(const std::string& name, const std::vector<int64_t>& shape, DataType dtype)
+        : name(name), shape(shape), dtype(dtype) {}
 };
 
 class TensorManager {

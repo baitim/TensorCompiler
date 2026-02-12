@@ -65,6 +65,11 @@ public:
 struct Attribute {
     std::string name;
     std::unique_ptr<AttrValueBase> value;
+
+public:
+    Attribute() = default;
+    Attribute(std::string name, std::unique_ptr<AttrValueBase> value)
+        : name(std::move(name)), value(std::move(value)) {}
 };
 
 } // namespace tc

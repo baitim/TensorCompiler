@@ -14,9 +14,7 @@ Attribute* Node::add_attribute(const std::string& name, std::unique_ptr<AttrValu
 }
 
 Node* NodeManager::create_node(const std::string& name, OpType op_type) {
-    Node* node = node_storage_.create();
-    node->name = name;
-    node->op_type = op_type;
+    Node* node = node_storage_.create(name, op_type);
     nodes.push_back(node);
     return node;
 }

@@ -3,8 +3,7 @@
 namespace tc {
 
 Tensor* TensorManager::create_tensor(const std::string& name) {
-    Tensor* tensor = tensor_storage_.create();
-    tensor->name = name;
+    Tensor* tensor = tensor_storage_.create(name);
     tensors[name] = tensor;
     return tensor;
 }
@@ -12,10 +11,7 @@ Tensor* TensorManager::create_tensor(const std::string& name) {
 Tensor* TensorManager::create_tensor_with_data(const std::string& name,
                                               const std::vector<int64_t>& shape,
                                               DataType dtype) {
-    Tensor* tensor = tensor_storage_.create();
-    tensor->name = name;
-    tensor->shape = shape;
-    tensor->dtype = dtype;
+    Tensor* tensor = tensor_storage_.create(name, shape, dtype);
     tensors[name] = tensor;
     return tensor;
 }
