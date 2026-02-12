@@ -31,9 +31,14 @@
 
 ## Supported options
 
-* print options info <code>--help</code>
-* generate GraphViz dot file <code>--graphviz-dump</code>
-* print graph info <code>--print-graph</code>
+* Print options info <code>--help</code>
+* Generate GraphViz dot file <code>--graphviz-dump</code>
+* Print graph info <code>--print-graph</code>
+
+## How to test
+
+* Run testing <br>
+    <code>ctest --test-dir build/Release --output-on-failure</code>
 
 <p align="center"><img src="https://github.com/baitim/TensorCompiler/blob/main/images/cat.gif" width="50%"></p>
 

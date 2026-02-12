@@ -35,10 +35,46 @@ OpType ONNXParser::convert_op_type(std::string_view op_type_str) {
     return OpType::UNKNOWN;
 }
 
+void ONNXParser::parse_value_info(ComputationalGraph& graph,
+                                  const google::protobuf::RepeatedPtrField<onnx::ValueInfoProto>& value_infos,
+                                  bool is_input) {
+    for (int i = 0; i < value_infos.size(); ++i) {
+        const onnx::ValueInfoProto& value_info = value_infos.Get(i);
+        std::string tensor_name = value_info.name();
+        Tensor* tensor = graph.get_tensor(tensor_name);
+        if (!tensor)
+            tensor = graph.create_tensor(tensor_name);
+
+        if (value_info.has_type() && value_info.type().has_tensor_type()) {
+            const auto& tensor_type = value_info.type().tensor_type();
+            DataType dtype = convert_onnx_type(tensor_type.elem_type());
+            tensor->dtype = dtype;
+
+            if (tensor_type.has_shape()) {
+                const auto& shape_proto = tensor_type.shape();
+                tensor->shape.clear();
+                tensor->shape.reserve(shape_proto.dim_size());
+                for (int j = 0; j < shape_proto.dim_size(); ++j) {
+                    const auto& dim = shape_proto.dim(j);
+                    if (dim.has_dim_value()) {
+                        tensor->shape.push_back(dim.dim_value());
+                    } else if (dim.has_dim_param()) {
+                        tensor->shape.push_back(-1);
+                    }
+                }
+            }
+        }
+
+        if (is_input)
+            graph.add_input_tensor(tensor);
+        else
+            graph.add_output_tensor(tensor);
+    }
+}
+
 void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
     for (int i = 0; i < onnx_graph.initializer_size(); ++i) {
         const onnx::TensorProto& tensor_proto = onnx_graph.initializer(i);
-
         std::string tensor_name = tensor_proto.name();
 
         std::vector<int64_t> shape;
@@ -55,47 +91,11 @@ void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::Graph
 }
 
 void ONNXParser::parse_inputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
-    for (int i = 0; i < onnx_graph.input_size(); ++i) {
-        const onnx::ValueInfoProto& value_info = onnx_graph.input(i);
-        std::string tensor_name = value_info.name();
-
-        Tensor* tensor = graph.get_tensor(tensor_name);
-        if (!tensor) {
-            tensor = graph.create_tensor(tensor_name);
-
-            if (value_info.has_type() && value_info.type().has_tensor_type()) {
-                const auto& tensor_type = value_info.type().tensor_type();
-                DataType dtype = convert_onnx_type(tensor_type.elem_type());
-                tensor->dtype = dtype;
-
-                if (tensor_type.has_shape()) {
-                    const auto& shape_proto = tensor_type.shape();
-                    tensor->shape.reserve(shape_proto.dim_size());
-                    for (int j = 0; j < shape_proto.dim_size(); ++j) {
-                        const auto& dim = shape_proto.dim(j);
-                        if (dim.has_dim_value()) {
-                            tensor->shape.push_back(dim.dim_value());
-                        } else if (dim.has_dim_param()) {
-                            tensor->shape.push_back(-1);
-                        }
-                    }
-                }
-            }
-        }
-
-        graph.add_input_tensor(tensor);
-    }
+    parse_value_info(graph, onnx_graph.input(), true);
 }
 
 void ONNXParser::parse_outputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
-    for (int i = 0; i < onnx_graph.output_size(); ++i) {
-        const onnx::ValueInfoProto& value_info = onnx_graph.output(i);
-        std::string tensor_name = value_info.name();
-        Tensor* tensor = graph.get_tensor(tensor_name);
-        if (!tensor)
-            tensor = graph.create_tensor(tensor_name);
-        graph.add_output_tensor(tensor);
-    }
+    parse_value_info(graph, onnx_graph.output(), false);
 }
 
 void ONNXParser::parse_attributes(Node* node, const onnx::NodeProto& node_proto) {
