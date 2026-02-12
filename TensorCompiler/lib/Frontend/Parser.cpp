@@ -1,8 +1,15 @@
+#include "Common/Errors.hpp"
 #include "Frontend/Parser.hpp"
-#include <onnx/onnx_pb.h>
 #include <fstream>
+#include <onnx/onnx_pb.h>
 
 namespace tc::fe {
+
+class ErrorONNXParse : public Error {
+public:
+    ErrorONNXParse(std::string_view reason)
+        : Error(std::string("ONNX parsing error: ") + std::string(reason)) {}
+};
 
 DataType ONNXParser::convert_onnx_type(int32_t onnx_type) {
     switch(onnx_type) {
@@ -228,4 +235,4 @@ ComputationalGraph ONNXParser::parse_from_buffer(const std::vector<char>& buffer
     return graph;
 }
 
-}
+} // namespace tc::fe
