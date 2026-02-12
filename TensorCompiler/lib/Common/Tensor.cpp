@@ -16,9 +16,11 @@ Tensor* TensorManager::create_tensor_with_data(const std::string& name,
     return tensor;
 }
 
-Tensor* TensorManager::get_tensor(const std::string& name) const {
+std::optional<Tensor*> TensorManager::get_tensor(const std::string& name) const {
     auto it = tensors.find(name);
-    return it != tensors.end() ? it->second : nullptr;
+    if (it != tensors.end())
+        return it->second;
+    return std::nullopt;
 }
 
 size_t TensorManager::tensor_count() const {

@@ -2,6 +2,7 @@
 
 #include "Common/Storage.hpp"
 #include "Common/Types.hpp"
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -45,7 +46,7 @@ public:
     Tensor* create_tensor_with_data(const std::string& name,
                                     const std::vector<int64_t>& shape,
                                     DataType dtype);
-    Tensor* get_tensor(const std::string& name) const;
+    std::optional<Tensor*> get_tensor(const std::string& name) const;
     size_t tensor_count() const;
 
     void add_input_tensor(Tensor* t) { input_tensors.push_back(t); }

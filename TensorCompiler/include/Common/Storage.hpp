@@ -7,15 +7,12 @@
 namespace tc {
 
 template<typename T>
-concept Storable = std::default_initializable<T>;
-
-template<Storable T>
 class Storage {
 private:
     std::vector<std::unique_ptr<T>> storage_;
 
 public:
-    T* create() {
+    T* create() requires std::default_initializable<T> {
         auto obj = std::make_unique<T>();
         T* ptr = obj.get();
         storage_.push_back(std::move(obj));
@@ -23,7 +20,7 @@ public:
     }
 
     template<typename... Args>
-    T* create(Args&&... args) {
+    T* create(Args&&... args) requires std::constructible_from<T, Args...> {
         auto obj = std::make_unique<T>(std::forward<Args>(args)...);
         T* ptr = obj.get();
         storage_.push_back(std::move(obj));

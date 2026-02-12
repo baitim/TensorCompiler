@@ -1,5 +1,6 @@
 #include "Common/Graph.hpp"
 #include "Common/Node.hpp"
+#include <format>
 #include <iomanip>
 
 namespace tc {
@@ -19,19 +20,19 @@ static std::string dtype_to_string(DataType dtype) {
 
 void ComputationalGraph::print_summary(std::ostream& os) const {
     os << "=== Computational Graph Summary ===" << std::endl;
-    os << "Name: " << name_ << std::endl;
-    os << "Nodes: " << node_count() << std::endl;
-    os << "Tensors: " << tensor_count() << std::endl;
-    os << "Input tensors: " << input_tensors.size() << std::endl;
-    os << "Output tensors: " << output_tensors.size() << std::endl;
-    os << "Initializers: " << initializers.size() << std::endl;
+    os << std::format("Name: {}\n", name_);
+    os << std::format("Nodes: {}\n", node_count());
+    os << std::format("Tensors: {}\n", tensor_count());
+    os << std::format("Input tensors: {}\n", input_tensors.size());
+    os << std::format("Output tensors: {}\n", output_tensors.size());
+    os << std::format("Initializers: {}\n", initializers.size());
 }
 
 void ComputationalGraph::print_detailed(std::ostream& os) const {
     print_summary(os);
-    
+
     os << "\n=== Detailed Information ===" << std::endl;
-    
+
     os << "\nInput Tensors:" << std::endl;
     for (auto tensor : input_tensors) {
         os << "  - " << tensor->name << " [";
@@ -41,7 +42,7 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
         }
         os << "]" << std::endl;
     }
-    
+
     os << "\nOutput Tensors:" << std::endl;
     for (auto tensor : output_tensors) {
         os << "  - " << tensor->name << " [";
@@ -51,7 +52,7 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
         }
         os << "]" << std::endl;
     }
-    
+
     os << "\nInitializers (weights):" << std::endl;
     for (auto tensor : initializers) {
         os << "  - " << tensor->name << " [";
@@ -59,12 +60,12 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
             os << tensor->shape[i];
             if (i < tensor->shape.size() - 1) os << ", ";
         }
-        os << "] dtype=" << dtype_to_string(tensor->dtype) << std::endl;
+        os << std::format("] dtype={}\n", dtype_to_string(tensor->dtype));
     }
-    
+
     os << "\nNodes:" << std::endl;
     for (auto node : nodes) {
-        os << "  - " << node->name << " [" << op_type_to_string(node->op_type) << "]" << std::endl;
+        os << std::format("  - {} [{}]\n", node->name, op_type_to_string(node->op_type));
         os << "    Inputs: ";
         for (auto input : node->inputs)
             os << input->name << " ";
@@ -73,9 +74,9 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
         for (auto output : node->outputs)
             os << output->name << " ";
         os << std::endl;
-        os << "    Attributes (" << node->attributes.size() << "):" << std::endl;
+        os << std::format("    Attributes ({}):\n", node->attributes.size());
         for (const auto& [name, attr] : node->attributes) {
-            os << "      " << name << " (" << attr->value->type_name() << "): ";
+            os << std::format("      {} ({}): ", name, attr->value->type_name());
             attr->value->print(os);
             os << std::endl;
         }
@@ -95,13 +96,12 @@ void ComputationalGraph::dump_graphviz(std::ostream& os) const {
     os << "  edge [fontname=\"Arial\"];\n\n";
 
     for (const auto& [name, tensor] : tensors) {
-        std::string label = name;
         std::string shape_str;
         for (size_t i = 0; i < tensor->shape.size(); ++i) {
             if (i > 0) shape_str += "×";
             shape_str += std::to_string(tensor->shape[i]);
         }
-        if (!shape_str.empty()) label += "\\n" + shape_str;
+        std::string label = shape_str.empty() ? name : std::format("{}\\n{}", name, shape_str);
         os << "  " << escape_id(name) << " [label=" << escape_id(label)
            << ", shape=ellipse, style=filled, fillcolor=";
         if (tensor->is_initializer)
@@ -113,7 +113,7 @@ void ComputationalGraph::dump_graphviz(std::ostream& os) const {
     os << "\n";
 
     for (auto node : nodes) {
-        std::string opLabel = node->name + "\\n" + op_type_to_string(node->op_type);
+        std::string opLabel = std::format("{}\\n{}", node->name, op_type_to_string(node->op_type));
         os << "  " << escape_id(node->name) << " [label=" << escape_id(opLabel)
            << ", shape=box, style=filled, fillcolor=lightgreen];\n";
     }
