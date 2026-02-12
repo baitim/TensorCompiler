@@ -29,6 +29,12 @@
 6. Run <br>
     <code>./build/Release/TensorCompiler/tensor_compiler \<program\></code>
 
+## Supported options
+
+* print options info <code>--help</code>
+* generate GraphViz dot file <code>--graphviz-dump</code>
+* print graph info <code>--print-graph</code>
+
 <p align="center"><img src="https://github.com/baitim/TensorCompiler/blob/main/images/cat.gif" width="50%"></p>
 
 ## Support

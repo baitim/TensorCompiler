@@ -16,6 +16,7 @@ public:
 
     void print_summary(std::ostream& os) const;
     void print_detailed(std::ostream& os) const;
+    void dump_graphviz(std::ostream& os) const;
 };
 
 } // namespace tc

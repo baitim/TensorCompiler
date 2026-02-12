@@ -29,4 +29,6 @@ public:
     size_t node_count() const;
 };
 
+std::string op_type_to_string(OpType op_type);
+
 } // namespace tc

@@ -25,4 +25,17 @@ size_t NodeManager::node_count() const {
     return node_storage_.count();
 }
 
+std::string op_type_to_string(OpType op_type) {
+    switch(op_type) {
+        case OpType::ADD: return "Add";
+        case OpType::MUL: return "Mul";
+        case OpType::CONV: return "Conv";
+        case OpType::RELU: return "Relu";
+        case OpType::MATMUL: return "MatMul";
+        case OpType::GEMM: return "Gemm";
+        case OpType::RESHAPE: return "Reshape";
+        default: return "Unknown";
+    }
+}
+
 } // namespace tc
