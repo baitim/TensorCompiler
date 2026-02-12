@@ -18,7 +18,7 @@ private:
     void parse_attributes(Node* node, const onnx::NodeProto& node_proto);
     void parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph);
 
-    ComputationalGraph parse_from_buffer(const std::vector<char>& buffer);
+    ComputationalGraph parse_from_buffer(std::span<const char> buffer);
 
 public:
     ComputationalGraph parse(std::string_view model_path);

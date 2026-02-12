@@ -16,6 +16,8 @@ struct Node {
     std::string domain = "";
 
 public:
+    Node() = default;
+    Node(const std::string& name, OpType op_type) : name(name), op_type(op_type) {}
     Attribute* add_attribute(const std::string& name, std::unique_ptr<AttrValueBase> value);
 };
 

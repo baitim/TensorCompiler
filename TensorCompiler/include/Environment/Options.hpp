@@ -2,6 +2,7 @@
 
 #include "Common/Errors.hpp"
 #include <algorithm>
+#include <format>
 #include <iostream>
 #include <memory>
 #include <ranges>
@@ -13,7 +14,7 @@ namespace tc::env {
 class ErrorUndeclOption : public Error {
 public:
     ErrorUndeclOption(std::string_view option_name)
-        : Error(std::string("missing necessary option: ") + std::string(option_name)) {}
+        : Error(std::format("missing necessary option: {}", option_name)) {}
 };
 
 class Option {
@@ -30,7 +31,7 @@ public:
     Option(std::string_view name, bool is_necessary, bool is_titled, std::string_view description)
         : name_(name), is_necessary_(is_necessary), is_titled_(is_titled), description_(description) {
         if (name.size() > max_length_)
-            throw Error(std::string("option name too long: ") + std::string(name));
+            throw Error(std::format("option name too long: {}", name));
     }
     virtual ~Option() = default;
 
@@ -195,10 +196,7 @@ public:
     std::ostream& print_help(std::ostream& os) const {
         os << "Supported options:\n";
         for (const auto& [name, opt] : get_sorted_options()) {
-            os << "  " << name;
-            int pad = opt->max_length() - static_cast<int>(name.size());
-            for (int i = 0; i < pad; ++i) os << " ";
-            os << " " << opt->description() << '\n';
+            os << std::format("  {:<{}} {}\n", name, opt->max_length(), opt->description());
         }
         return os;
     }
