@@ -68,12 +68,12 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
         os << "    Inputs: ";
         for (auto input : node->inputs)
             os << input->name << " ";
-
-        os << "\n    Outputs: ";
+        os << std::endl;
+        os << "    Outputs: ";
         for (auto output : node->outputs)
             os << output->name << " ";
-
-        os << "\n    Attributes (" << node->attributes.size() << "):" << std::endl;
+        os << std::endl;
+        os << "    Attributes (" << node->attributes.size() << "):" << std::endl;
         for (const auto& [name, attr] : node->attributes) {
             os << "      " << name << " (" << attr->value->type_name() << "): ";
             attr->value->print(os);
