@@ -27,7 +27,7 @@
     <code>cmake --preset release; cmake --build build/Release</code>
 
 6. Run <br>
-    <code>./build/Release/TensorCompiler/tensor_compiler \<program\></code>
+    <code>./build/Release/TensorCompiler/tensor-compiler \<program\></code>
 
 ## Supported options
 
