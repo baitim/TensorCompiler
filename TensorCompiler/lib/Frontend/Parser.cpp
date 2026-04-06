@@ -169,7 +169,7 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
         OpType op_type = convert_op_type(op_type_str);
 
         if (op_type == OpType::UNKNOWN) {
-            dbgs << std::format("Warning: Skipping unsupported operation: {}\n", op_type_str);
+            tc_dbgs << std::format("Warning: Skipping unsupported operation: {}\n", op_type_str);
             return;
         }
 
@@ -206,7 +206,7 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
 }
 
 ComputationalGraph ONNXParser::parse(std::string_view model_path) {
-    dbgs << std::format("Parsing ONNX model from: {}\n", model_path);
+    tc_dbgs << std::format("Parsing ONNX model from: {}\n", model_path);
 
     std::ifstream file(std::string(model_path), std::ios::binary);
     if (!file.is_open()) {
@@ -233,19 +233,19 @@ ComputationalGraph ONNXParser::parse_from_buffer(std::span<const char> buffer) {
     const onnx::GraphProto& onnx_graph = model.graph();
     ComputationalGraph graph(onnx_graph.name());
 
-    dbgs << std::format("Parsing initializers...\n");
+    tc_dbgs << std::format("Parsing initializers...\n");
     parse_initializers(graph, onnx_graph);
 
-    dbgs << std::format("Parsing inputs...\n");
+    tc_dbgs << std::format("Parsing inputs...\n");
     parse_inputs(graph, onnx_graph);
 
-    dbgs << std::format("Parsing outputs...\n");
+    tc_dbgs << std::format("Parsing outputs...\n");
     parse_outputs(graph, onnx_graph);
 
-    dbgs << std::format("Parsing nodes...\n");
+    tc_dbgs << std::format("Parsing nodes...\n");
     parse_nodes(graph, onnx_graph);
 
-    dbgs << std::format("ONNX parsing completed successfully!\n");
+    tc_dbgs << std::format("ONNX parsing completed successfully!\n");
     return graph;
 }
 

@@ -2,4 +2,5 @@
 .vscode
 build
 CMakeUserPresets.json
-task.pdf
+task_CG.pdf
+task_FE.pdf

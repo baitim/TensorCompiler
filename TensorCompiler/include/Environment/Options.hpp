@@ -102,6 +102,81 @@ public:
     }
 };
 
+class OptEmitMlir final : public Option {
+    bool value_ = false;
+public:
+    OptEmitMlir() : Option("--emit-mlir", false, true, "emit MLIR text") {}
+    bool value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option == name()) { value_ = true; is_set_ = true; }
+        return is_set_;
+    }
+};
+
+class OptEmitLlvm final : public Option {
+    bool value_ = false;
+public:
+    OptEmitLlvm() : Option("--emit-llvm", false, true, "emit LLVM IR") {}
+    bool value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option == name()) { value_ = true; is_set_ = true; }
+        return is_set_;
+    }
+};
+
+class OptEmitAsm final : public Option {
+    bool value_ = false;
+public:
+    OptEmitAsm() : Option("--emit-asm", false, true, "emit assembly") {}
+    bool value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option == name()) { value_ = true; is_set_ = true; }
+        return is_set_;
+    }
+};
+
+class OptTargetTriple final : public Option {
+    std::string value_;
+public:
+    OptTargetTriple() : Option("--target", false, true, "target triple (e.g. x86_64-unknown-linux-gnu)") {}
+    const std::string& value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option.substr(0, 9) == "--target=") {
+            value_ = option.substr(9);
+            is_set_ = true;
+        }
+        return is_set_;
+    }
+};
+
+class OptOptLevel final : public Option {
+    int value_ = 2;
+public:
+    OptOptLevel() : Option("--opt-level", false, true, "optimization level (0-3)") {}
+    int value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option.substr(0, 11) == "--opt-level=") {
+            value_ = std::stoi(std::string(option.substr(11)));
+            is_set_ = true;
+        }
+        return is_set_;
+    }
+};
+
+class OptOutputFile final : public Option {
+    std::string value_;
+public:
+    OptOutputFile() : Option("--output", false, true, "output file base name") {}
+    const std::string& value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option.substr(0, 9) == "--output=") {
+            value_ = option.substr(9);
+            is_set_ = true;
+        }
+        return is_set_;
+    }
+};
+
 class Options {
 protected:
     std::unordered_map<std::string, std::unique_ptr<Option>> options_;
@@ -138,6 +213,12 @@ public:
         options_.emplace("--help", std::make_unique<OptHelp>());
         options_.emplace("--graphviz-dump", std::make_unique<OptionGraphvizDump>());
         options_.emplace("--print-graph", std::make_unique<OptPrintGraph>());
+        options_.emplace("--emit-mlir", std::make_unique<OptEmitMlir>());
+        options_.emplace("--emit-llvm", std::make_unique<OptEmitLlvm>());
+        options_.emplace("--emit-asm", std::make_unique<OptEmitAsm>());
+        options_.emplace("--target", std::make_unique<OptTargetTriple>());
+        options_.emplace("--opt-level", std::make_unique<OptOptLevel>());
+        options_.emplace("--output", std::make_unique<OptOutputFile>());
         cnt_options_ = get_cnt_options();
     }
     virtual ~Options() = default;
@@ -186,6 +267,31 @@ public:
     bool print_graph() const noexcept {
         auto it = options_.find("--print-graph");
         return static_cast<OptPrintGraph*>(it->second.get())->value();
+    }
+
+    bool emit_mlir() const noexcept {
+        auto it = options_.find("--emit-mlir");
+        return static_cast<OptEmitMlir*>(it->second.get())->value();
+    }
+    bool emit_llvm() const noexcept {
+        auto it = options_.find("--emit-llvm");
+        return static_cast<OptEmitLlvm*>(it->second.get())->value();
+    }
+    bool emit_asm() const noexcept {
+        auto it = options_.find("--emit-asm");
+        return static_cast<OptEmitAsm*>(it->second.get())->value();
+    }
+    std::string target_triple() const {
+        auto it = options_.find("--target");
+        return static_cast<OptTargetTriple*>(it->second.get())->value();
+    }
+    int opt_level() const {
+        auto it = options_.find("--opt-level");
+        return static_cast<OptOptLevel*>(it->second.get())->value();
+    }
+    std::string output_filename() const {
+        auto it = options_.find("--output");
+        return static_cast<OptOutputFile*>(it->second.get())->value();
     }
 
     bool help() const noexcept {

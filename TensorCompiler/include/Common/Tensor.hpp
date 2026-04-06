@@ -34,12 +34,14 @@ public:
 };
 
 class TensorManager {
-protected:
-    Storage<Tensor> tensor_storage_;
-    std::unordered_map<std::string, Tensor*> tensors;
+public:
     std::vector<Tensor*> input_tensors;
     std::vector<Tensor*> output_tensors;
     std::vector<Tensor*> initializers;
+
+protected:
+    Storage<Tensor> tensor_storage_;
+    std::unordered_map<std::string, Tensor*> tensors;
 
 public:
     Tensor* create_tensor(const std::string& name);

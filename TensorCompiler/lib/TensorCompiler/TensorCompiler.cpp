@@ -1,5 +1,6 @@
 #include "Environment/Options.hpp"
 #include "Frontend/Parser.hpp"
+#include "Backend/MlirEmitter.hpp"
 #include <filesystem>
 #include <fstream>
 
@@ -21,11 +22,17 @@ int main(int argc, char* argv[]) try {
         if (!dot_file.is_open())
             throw tc::Error(std::format("Could not create DOT file: {}", dot_path));
         graph.dump_graphviz(dot_file);
-        dbgs << std::format("GraphViz DOT file written to: {}\n", dot_path);
+        tc_dbgs << std::format("GraphViz DOT file written to: {}\n", dot_path);
     }
 
     if (opt.print_graph()) {
         graph.print_detailed(std::cout);
+    }
+
+    if (opt.emit_mlir() || opt.emit_llvm() || opt.emit_asm()) {
+        tc::MlirEmitter::Options mlirOpts(opt);
+        tc::MlirEmitter emitter(graph, mlirOpts);
+        emitter.emit();
     }
 
     return 0;

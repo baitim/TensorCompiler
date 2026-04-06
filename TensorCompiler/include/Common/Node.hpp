@@ -22,9 +22,11 @@ public:
 };
 
 class NodeManager {
+public:
+    std::vector<Node*> nodes;
+
 protected:
     Storage<Node> node_storage_;
-    std::vector<Node*> nodes;
 
 public:
     Node* create_node(const std::string& name, OpType op_type);

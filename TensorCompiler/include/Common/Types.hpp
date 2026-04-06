@@ -3,9 +3,9 @@
 #include <iostream>
 
 #ifdef DEBUG_DUMP
-#define dbgs std::cout
+#define tc_dbgs std::cout
 #else
-#define dbgs if (false) std::cout
+#define tc_dbgs if (false) std::cout
 #endif
 
 namespace tc {

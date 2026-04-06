@@ -79,6 +79,6 @@ jobs:
           conan create . --build=missing -s build_type=Release
           conan create . --build=missing -s build_type=Debug
 
-      - name: upload conan packages to server
-        run: |
-          conan upload tensor_compiler/1.0@baitim --remote conan_packages
+      # - name: upload conan packages to server
+      #   run: |
+      #     conan upload tensor_compiler/1.0@baitim --remote conan_packages

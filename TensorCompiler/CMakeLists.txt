@@ -1,4 +1,15 @@
 find_package(ONNX REQUIRED)
+if(DEFINED LLVM_DIR)
+    set(LLVM_DIR ${LLVM_DIR} CACHE PATH "Path to LLVM cmake" FORCE)
+endif()
+if(DEFINED MLIR_DIR)
+    set(MLIR_DIR ${MLIR_DIR} CACHE PATH "Path to MLIR cmake" FORCE)
+endif()
+find_package(MLIR REQUIRED)
+find_package(LLVM REQUIRED)
+
+set(LLVM_USE_SHARED_LIBS ON CACHE BOOL "Use shared LLVM libraries")
+set(MLIR_USE_SHARED_LIBS ON CACHE BOOL "Use shared MLIR libraries")
 
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -32,11 +43,32 @@ target_link_libraries(Frontend
     onnx::onnx
 )
 
+# -------------- Backend --------------
+
+set(BACKEND_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Backend)
+add_library(Backend STATIC
+    ${BACKEND_LIB_DIR}/MlirEmitter.cpp
+)
+target_include_directories(Backend PUBLIC
+    $<BUILD_INTERFACE:${INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+target_include_directories(Backend PUBLIC
+    ${MLIR_INCLUDE_DIRS}
+    ${LLVM_INCLUDE_DIRS}
+)
+target_link_libraries(Backend
+    PUBLIC
+    Frontend
+    LLVM
+    MLIR
+)
+
 # -------------- Execution -------------
 
 set(TENSOR_COMPILER_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/TensorCompiler)
 add_executable(tensor-compiler ${TENSOR_COMPILER_LIB_DIR}/TensorCompiler.cpp)
-target_link_libraries(tensor-compiler Frontend)
+target_link_libraries(tensor-compiler Frontend Backend)
 
 # ---------------- Test ----------------
 
@@ -49,9 +81,9 @@ endif()
 if(DEFINED ENV{CONAN_PACKAGE})
     include(GNUInstallDirs)
 
-    set_target_properties(Frontend Common PROPERTIES EXPORT_NAME TensorCompiler)
+    set_target_properties(Common Frontend Backend PROPERTIES EXPORT_NAME TensorCompiler)
 
-    install(TARGETS Frontend Common EXPORT TensorCompilerTargets
+    install(TARGETS Common Frontend Backend EXPORT TensorCompilerTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
