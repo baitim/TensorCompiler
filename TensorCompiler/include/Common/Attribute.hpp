@@ -41,7 +41,7 @@ public:
 class FloatsAttrValue : public AttrValueBase {
 public:
     std::vector<float> value;
-    FloatsAttrValue(const std::vector<float>& v) : value(v) {}
+    FloatsAttrValue(std::vector<float> v) : value(std::move(v)) {}
     void print(std::ostream& os) const override;
     std::string type_name() const override;
 };
@@ -49,7 +49,7 @@ public:
 class IntsAttrValue : public AttrValueBase {
 public:
     std::vector<int64_t> value;
-    IntsAttrValue(const std::vector<int64_t>& v) : value(v) {}
+    IntsAttrValue(std::vector<int64_t> v) : value(std::move(v)) {}
     void print(std::ostream& os) const override;
     std::string type_name() const override;
 };
@@ -57,7 +57,7 @@ public:
 class StringsAttrValue : public AttrValueBase {
 public:
     std::vector<std::string> value;
-    StringsAttrValue(const std::vector<std::string>& v) : value(v) {}
+    StringsAttrValue(std::vector<std::string> v) : value(std::move(v)) {}
     void print(std::ostream& os) const override;
     std::string type_name() const override;
 };
@@ -66,7 +66,6 @@ struct Attribute {
     std::string name;
     std::unique_ptr<AttrValueBase> value;
 
-public:
     Attribute() = default;
     Attribute(std::string name, std::unique_ptr<AttrValueBase> value)
         : name(std::move(name)), value(std::move(value)) {}

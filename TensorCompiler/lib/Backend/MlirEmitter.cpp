@@ -1,7 +1,6 @@
 #include "Backend/MlirEmitter.hpp"
 #include "Common/Node.hpp"
 #include "Common/Tensor.hpp"
-#include <fstream>
 #include <iostream>
 #include <variant>
 
@@ -142,7 +141,7 @@ void MlirEmitter::buildMLIR() {
         }
         outputVals.push_back(v);
     }
-    builder_->create<mlir::func::ReturnOp>(loc, outputVals);
+    mlir::func::ReturnOp::create(*builder_, loc, outputVals);
     module_.push_back(func);
 
     if (mlir::failed(mlir::verify(module_))) {
@@ -209,7 +208,7 @@ void MlirEmitter::createConstantTensor(const Tensor* tensor) {
             return;
     }
 
-    auto constant = builder_->create<mlir::arith::ConstantOp>(loc, attr);
+    auto constant = mlir::arith::ConstantOp::create(*builder_, loc, attr);
     setValue(tensor->name, constant.getResult());
 }
 
@@ -221,9 +220,9 @@ mlir::Value MlirEmitter::reshapeTensor(mlir::Value input, llvm::ArrayRef<int64_t
     llvm::SmallVector<int64_t> shapeVec(newShape.begin(), newShape.end());
     auto shapeType = mlir::RankedTensorType::get({(int64_t)shapeVec.size()}, builder_->getIntegerType(64));
     auto shapeAttr = mlir::DenseIntElementsAttr::get(shapeType, shapeVec);
-    auto shapeConst = builder_->create<mlir::arith::ConstantOp>(loc, shapeAttr);
+    auto shapeConst = mlir::arith::ConstantOp::create(*builder_, loc, shapeAttr);
 
-    return builder_->create<mlir::tensor::ReshapeOp>(loc, resultTy, input, shapeConst);
+    return mlir::tensor::ReshapeOp::create(*builder_, loc, resultTy, input, shapeConst);
 }
 
 mlir::Value MlirEmitter::createZeroTensor(llvm::ArrayRef<int64_t> shape, mlir::Type elementType) {
@@ -242,7 +241,7 @@ mlir::Value MlirEmitter::createZeroTensor(llvm::ArrayRef<int64_t> shape, mlir::T
         zeroAttr = mlir::DenseElementsAttr::get(tensorType, llvm::ArrayRef(zeros));
     }
 
-    return builder_->create<mlir::arith::ConstantOp>(loc, zeroAttr);
+    return mlir::arith::ConstantOp::create(*builder_, loc, zeroAttr);
 }
 
 mlir::Value MlirEmitter::broadcastBias(mlir::Value bias, llvm::ArrayRef<int64_t> targetShape) {
@@ -264,15 +263,15 @@ mlir::Value MlirEmitter::broadcastBias(mlir::Value bias, llvm::ArrayRef<int64_t>
 
     llvm::SmallVector<mlir::utils::IteratorType> iterTypes(rank, mlir::utils::IteratorType::parallel);
 
-    auto generic = builder_->create<mlir::linalg::GenericOp>(
-        loc,
+    auto generic = mlir::linalg::GenericOp::create(
+        *builder_, loc,
         mlir::TypeRange{resultTy},
         mlir::ValueRange{bias},
         mlir::ValueRange{outputInit},
         llvm::ArrayRef<mlir::AffineMap>{inputMap, outputMap},
         iterTypes,
         [](mlir::OpBuilder& b, mlir::Location loc, mlir::ValueRange args) {
-            b.create<mlir::linalg::YieldOp>(loc, args[0]);
+            mlir::linalg::YieldOp::create(b, loc, args[0]);
         }
     );
 
@@ -303,7 +302,7 @@ void MlirEmitter::emitNode(const Node* node) {
         if (auto tensorType = mlir::dyn_cast<mlir::RankedTensorType>(type)) {
             if (tensorType.getElementType().isF32()) return val;
             auto newType = mlir::RankedTensorType::get(tensorType.getShape(), builder_->getF32Type());
-            return builder_->create<mlir::arith::SIToFPOp>(loc, newType, val);
+            return mlir::arith::SIToFPOp::create(*builder_, loc, newType, val);
         }
         if (type.isF32()) return val;
         return val;
@@ -323,9 +322,9 @@ void MlirEmitter::emitNode(const Node* node) {
             if (isFloatTensor(lhs) || isFloatTensor(rhs)) {
                 lhs = toFloat(lhs);
                 rhs = toFloat(rhs);
-                result = builder_->create<mlir::arith::AddFOp>(loc, lhs, rhs);
+                result = mlir::arith::AddFOp::create(*builder_, loc, lhs, rhs);
             } else {
-                result = builder_->create<mlir::arith::AddIOp>(loc, lhs, rhs);
+                result = mlir::arith::AddIOp::create(*builder_, loc, lhs, rhs);
             }
             break;
         }
@@ -335,9 +334,9 @@ void MlirEmitter::emitNode(const Node* node) {
             if (isFloatTensor(lhs) || isFloatTensor(rhs)) {
                 lhs = toFloat(lhs);
                 rhs = toFloat(rhs);
-                result = builder_->create<mlir::arith::MulFOp>(loc, lhs, rhs);
+                result = mlir::arith::MulFOp::create(*builder_, loc, lhs, rhs);
             } else {
-                result = builder_->create<mlir::arith::MulIOp>(loc, lhs, rhs);
+                result = mlir::arith::MulIOp::create(*builder_, loc, lhs, rhs);
             }
             break;
         }
@@ -348,7 +347,7 @@ void MlirEmitter::emitNode(const Node* node) {
                 return;
             }
             auto zeroTensor = createZeroTensor(inputType.getShape(), inputType.getElementType());
-            result = builder_->create<mlir::arith::MaximumFOp>(loc, inputs[0], zeroTensor);
+            result = mlir::arith::MaximumFOp::create(*builder_, loc, inputs[0], zeroTensor);
             break;
         }
         case OpType::MATMUL: {
@@ -363,8 +362,8 @@ void MlirEmitter::emitNode(const Node* node) {
             auto resultTy = mlir::RankedTensorType::get(
                 {lhsTy.getDimSize(0), rhsTy.getDimSize(1)}, lhsTy.getElementType());
             auto zeroTensor = createZeroTensor(resultTy.getShape(), resultTy.getElementType());
-            auto matmul = builder_->create<mlir::linalg::MatmulOp>(
-                loc, mlir::ValueRange{lhs, rhs}, mlir::ValueRange{zeroTensor});
+            auto matmul = mlir::linalg::MatmulOp::create(
+                *builder_, loc, mlir::ValueRange{lhs, rhs}, mlir::ValueRange{zeroTensor});
             result = matmul.getResult(0);
             break;
         }
@@ -380,15 +379,15 @@ void MlirEmitter::emitNode(const Node* node) {
             auto resultTy = mlir::RankedTensorType::get(
                 {lhsTy.getDimSize(0), rhsTy.getDimSize(1)}, lhsTy.getElementType());
             auto zeroTensor = createZeroTensor(resultTy.getShape(), resultTy.getElementType());
-            auto matmul = builder_->create<mlir::linalg::MatmulOp>(
-                loc, mlir::ValueRange{A, B}, mlir::ValueRange{zeroTensor});
+            auto matmul = mlir::linalg::MatmulOp::create(
+                *builder_, loc, mlir::ValueRange{A, B}, mlir::ValueRange{zeroTensor});
             result = matmul.getResult(0);
             if (inputs.size() >= 3) {
                 mlir::Value C = inputs[2];
                 auto CTy = mlir::cast<mlir::RankedTensorType>(C.getType());
                 if (CTy.getShape() != resultTy.getShape())
                     C = broadcastBias(C, resultTy.getShape());
-                result = builder_->create<mlir::arith::AddFOp>(loc, result, C);
+                result = mlir::arith::AddFOp::create(*builder_, loc, result, C);
             }
             break;
         }
@@ -444,8 +443,8 @@ void MlirEmitter::emitNode(const Node* node) {
                 mlir::VectorType::get({2}, builder_->getIntegerType(64)),
                 llvm::ArrayRef<int64_t>(dilationsVec));
 
-            auto conv = builder_->create<mlir::linalg::Conv2DNchwFchwOp>(
-                loc, mlir::TypeRange{zeroTensor.getType()},
+            auto conv = mlir::linalg::Conv2DNchwFchwOp::create(
+                *builder_, loc, mlir::TypeRange{zeroTensor.getType()},
                 mlir::ValueRange{input, weight}, mlir::ValueRange{zeroTensor},
                 strideAttr, dilationAttr);
             result = conv.getResult(0);
@@ -453,7 +452,7 @@ void MlirEmitter::emitNode(const Node* node) {
             if (inputs.size() >= 3) {
                 mlir::Value bias = inputs[2];
                 mlir::Value biasBroadcast = broadcastBias(bias, outShape);
-                result = builder_->create<mlir::arith::AddFOp>(loc, result, biasBroadcast);
+                result = mlir::arith::AddFOp::create(*builder_, loc, result, biasBroadcast);
             }
             break;
         }

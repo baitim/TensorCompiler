@@ -93,9 +93,9 @@ endif()
 if(DEFINED ENV{CONAN_PACKAGE})
     include(GNUInstallDirs)
 
-    set_target_properties(Common Frontend Backend PROPERTIES EXPORT_NAME TensorCompiler)
+    set_target_properties(Common Frontend Backend Executor PROPERTIES EXPORT_NAME TensorCompiler)
 
-    install(TARGETS Common Frontend Backend EXPORT TensorCompilerTargets
+    install(TARGETS Common Frontend Backend Executor EXPORT TensorCompilerTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
