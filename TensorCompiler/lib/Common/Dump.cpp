@@ -2,8 +2,49 @@
 #include "Common/Node.hpp"
 #include <format>
 #include <iomanip>
+#include <queue>
+#include <unordered_map>
 
 namespace tc {
+
+std::vector<const Node*> ComputationalGraph::topologicalOrder() const {
+    std::unordered_map<const Node*, int> inDegree;
+    std::unordered_map<const Node*, std::vector<const Node*>> adj;
+    std::unordered_map<std::string, const Node*> outputToNode;
+
+    for (const auto* node : nodes)
+        for (auto* t : node->outputs)
+            outputToNode[t->name] = node;
+
+    for (const auto* node : nodes) {
+        inDegree[node] = 0;
+        for (auto* t : node->inputs) {
+            auto it = outputToNode.find(t->name);
+            if (it != outputToNode.end() && it->second != node)
+                adj[it->second].push_back(node);
+        }
+    }
+
+    for (const auto& [node, succs] : adj)
+        for (auto* succ : succs)
+            inDegree[succ]++;
+
+    std::queue<const Node*> q;
+    for (const auto* node : nodes)
+        if (inDegree[node] == 0) q.push(node);
+
+    std::vector<const Node*> order;
+    while (!q.empty()) {
+        const Node* node = q.front(); q.pop();
+        order.push_back(node);
+        for (auto* succ : adj[node])
+            if (--inDegree[succ] == 0) q.push(succ);
+    }
+
+    if (order.size() != nodes.size())
+        return std::vector<const Node*>(nodes.begin(), nodes.end());
+    return order;
+}
 
 static std::string dtype_to_string(DataType dtype) {
     switch(dtype) {
@@ -19,7 +60,7 @@ static std::string dtype_to_string(DataType dtype) {
 }
 
 void ComputationalGraph::print_summary(std::ostream& os) const {
-    os << "=== Computational Graph Summary ===" << std::endl;
+    os << "=== Computational Graph Summary ===" << '\n';
     os << std::format("Name: {}\n", name_);
     os << std::format("Nodes: {}\n", node_count());
     os << std::format("Tensors: {}\n", tensor_count());
@@ -31,29 +72,29 @@ void ComputationalGraph::print_summary(std::ostream& os) const {
 void ComputationalGraph::print_detailed(std::ostream& os) const {
     print_summary(os);
 
-    os << "\n=== Detailed Information ===" << std::endl;
+    os << "\n=== Detailed Information ===" << '\n';
 
-    os << "\nInput Tensors:" << std::endl;
+    os << "\nInput Tensors:" << '\n';
     for (auto tensor : input_tensors) {
         os << "  - " << tensor->name << " [";
         for (size_t i = 0; i < tensor->shape.size(); ++i) {
             os << tensor->shape[i];
             if (i < tensor->shape.size() - 1) os << ", ";
         }
-        os << "]" << std::endl;
+        os << "]" << '\n';
     }
 
-    os << "\nOutput Tensors:" << std::endl;
+    os << "\nOutput Tensors:" << '\n';
     for (auto tensor : output_tensors) {
         os << "  - " << tensor->name << " [";
         for (size_t i = 0; i < tensor->shape.size(); ++i) {
             os << tensor->shape[i];
             if (i < tensor->shape.size() - 1) os << ", ";
         }
-        os << "]" << std::endl;
+        os << "]" << '\n';
     }
 
-    os << "\nInitializers (weights):" << std::endl;
+    os << "\nInitializers (weights):" << '\n';
     for (auto tensor : initializers) {
         os << "  - " << tensor->name << " [";
         for (size_t i = 0; i < tensor->shape.size(); ++i) {
@@ -63,22 +104,22 @@ void ComputationalGraph::print_detailed(std::ostream& os) const {
         os << std::format("] dtype={}\n", dtype_to_string(tensor->dtype));
     }
 
-    os << "\nNodes:" << std::endl;
+    os << "\nNodes:" << '\n';
     for (auto node : nodes) {
         os << std::format("  - {} [{}]\n", node->name, op_type_to_string(node->op_type));
         os << "    Inputs: ";
         for (auto input : node->inputs)
             os << input->name << " ";
-        os << std::endl;
+        os << '\n';
         os << "    Outputs: ";
         for (auto output : node->outputs)
             os << output->name << " ";
-        os << std::endl;
+        os << '\n';
         os << std::format("    Attributes ({}):\n", node->attributes.size());
         for (const auto& [name, attr] : node->attributes) {
             os << std::format("      {} ({}): ", name, attr->value->type_name());
             attr->value->print(os);
-            os << std::endl;
+            os << '\n';
         }
     }
 }

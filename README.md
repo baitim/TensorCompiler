@@ -3,7 +3,8 @@
 ## Description
 
 Implementation of a Tensor Compiler with ONNX frontend and MLIR/LLVM backend.  
-Parses ONNX models, builds a computational graph, and can emit MLIR, LLVM IR, or native assembly for a specified target architecture.
+Parses ONNX models, builds a computational graph, and can emit MLIR, LLVM IR, or native assembly for a specified target architecture.  
+Includes an executor that evaluates the graph directly and compares results against onnxruntime.
 
 ## How to integrate
  
@@ -17,7 +18,7 @@ Use [storage](https://github.com/baitim/TensorCompiler), project = "tensor_compi
 2. Go to folder <br>
     <code>cd TensorCompiler</code>
 
-3. Prepare conan <br>
+3. Prepare Python environment <br>
     <code>uv sync --group dev; source .venv/bin/activate</code><br>
     <code>conan profile detect --force</code>
 
@@ -43,6 +44,8 @@ Use [storage](https://github.com/baitim/TensorCompiler), project = "tensor_compi
 | `--target=<triple>` | Target triple (e.g., `x86_64-unknown-linux-gnu`) |
 | `--opt-level=<0-3>` | Optimization level (default: 2) |
 | `--output=<filename>` | Base name for output files (without extension) |
+| `--execute` | Run the model using the built-in executor |
+| `--input-data=<file>` | Binary float32 input file for `--execute` (defaults to all-ones) |
 
 ### Examples
 
@@ -53,8 +56,28 @@ Use [storage](https://github.com/baitim/TensorCompiler), project = "tensor_compi
 # Emit MLIR to output.mlir
 ./build/Release/TensorCompiler/tensor-compiler model.onnx --emit-mlir --output=model
 
-# Generate assembly for ARM64
-./build/Release/TensorCompiler/tensor-compiler model.onnx --emit-asm --target=aarch64-unknown-linux-gnu
+# Generate assembly for X86
+./build/Release/TensorCompiler/tensor-compiler model.onnx --emit-asm
+
+# Execute the model and print output
+./build/Release/TensorCompiler/tensor-compiler model.onnx --execute
+
+# Execute with custom input
+./build/Release/TensorCompiler/tensor-compiler model.onnx --execute --input-data=input.bin
+```
+
+## How to create and test the simple convolutional network
+
+```bash
+# Generate simple_convnet.onnx and input binary
+python TensorCompiler/utils/CreateModel.py
+
+# Compare executor output with onnxruntime
+python TensorCompiler/utils/RunModel.py \
+    --model TensorCompiler/test/simple_convnet.onnx \
+    --input TensorCompiler/test/simple_convnet_input.bin \
+    --compiler ./build/Release/TensorCompiler/tensor-compiler
+```
 
 ## How to test
 

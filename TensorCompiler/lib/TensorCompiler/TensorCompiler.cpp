@@ -1,8 +1,11 @@
 #include "Environment/Options.hpp"
 #include "Frontend/Parser.hpp"
 #include "Backend/MlirEmitter.hpp"
+#include "Executor/Executor.hpp"
 #include <filesystem>
 #include <fstream>
+#include <format>
+#include <iostream>
 
 int main(int argc, char* argv[]) try {
     tc::env::OptData opt;
@@ -25,8 +28,12 @@ int main(int argc, char* argv[]) try {
         tc_dbgs << std::format("GraphViz DOT file written to: {}\n", dot_path);
     }
 
-    if (opt.print_graph()) {
+    if (opt.print_graph())
         graph.print_detailed(std::cout);
+
+    if (opt.execute()) {
+        tc::Executor executor;
+        executor.execute(graph, opt.input_data(), std::cout);
     }
 
     if (opt.emit_mlir() || opt.emit_llvm() || opt.emit_asm()) {

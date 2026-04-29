@@ -177,6 +177,31 @@ public:
     }
 };
 
+class OptExecute final : public Option {
+    bool value_ = false;
+public:
+    OptExecute() : Option("--execute", false, true, "run the model using the executor") {}
+    bool value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option == name()) { value_ = true; is_set_ = true; }
+        return is_set_;
+    }
+};
+
+class OptInputData final : public Option {
+    std::string value_;
+public:
+    OptInputData() : Option("--input-data", false, true, "binary file with float32 input data") {}
+    const std::string& value() const noexcept { return value_; }
+    bool parse(std::string_view option) override {
+        if (option.substr(0, 13) == "--input-data=") {
+            value_ = option.substr(13);
+            is_set_ = true;
+        }
+        return is_set_;
+    }
+};
+
 class Options {
 protected:
     std::unordered_map<std::string, std::unique_ptr<Option>> options_;
@@ -211,6 +236,8 @@ public:
     Options() {
         options_.emplace("<model_file>", std::make_unique<OptModelFile>());
         options_.emplace("--help", std::make_unique<OptHelp>());
+        options_.emplace("--execute", std::make_unique<OptExecute>());
+        options_.emplace("--input-data", std::make_unique<OptInputData>());
         options_.emplace("--graphviz-dump", std::make_unique<OptionGraphvizDump>());
         options_.emplace("--print-graph", std::make_unique<OptPrintGraph>());
         options_.emplace("--emit-mlir", std::make_unique<OptEmitMlir>());
@@ -292,6 +319,14 @@ public:
     std::string output_filename() const {
         auto it = options_.find("--output");
         return static_cast<OptOutputFile*>(it->second.get())->value();
+    }
+    bool execute() const noexcept {
+        auto it = options_.find("--execute");
+        return static_cast<OptExecute*>(it->second.get())->value();
+    }
+    std::string input_data() const {
+        auto it = options_.find("--input-data");
+        return static_cast<OptInputData*>(it->second.get())->value();
     }
 
     bool help() const noexcept {

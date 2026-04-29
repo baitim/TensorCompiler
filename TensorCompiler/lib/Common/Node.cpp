@@ -3,12 +3,7 @@
 namespace tc {
 
 Attribute* Node::add_attribute(const std::string& name, std::unique_ptr<AttrValueBase> value) {
-    Attribute attr;
-    attr.name = name;
-    attr.value = std::move(value);
-
-    Attribute* stored = attr_storage.create();
-    *stored = std::move(attr);
+    Attribute* stored = attr_storage.create(name, std::move(value));
     attributes[stored->name] = stored;
     return stored;
 }

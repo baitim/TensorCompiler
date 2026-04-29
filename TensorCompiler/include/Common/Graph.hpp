@@ -2,6 +2,7 @@
 
 #include "Common/Node.hpp"
 #include <iosfwd>
+#include <vector>
 
 namespace tc {
 
@@ -13,6 +14,8 @@ public:
     ComputationalGraph(std::string_view name) : name_(name) {}
 
     std::string_view getName() const { return name_; }
+
+    std::vector<const Node*> topologicalOrder() const;
 
     void print_summary(std::ostream& os) const;
     void print_detailed(std::ostream& os) const;

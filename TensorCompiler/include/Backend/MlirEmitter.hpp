@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -12,6 +14,8 @@ class MLIRContext;
 class OpBuilder;
 class Value;
 class Type;
+class DenseElementsAttr;
+class AffineMap;
 }
 
 namespace llvm {
@@ -51,7 +55,11 @@ private:
     mlir::Type getMLIRType(DataType dtype, llvm::ArrayRef<int64_t> shape);
     mlir::Value getValue(const std::string& name);
     void setValue(const std::string& name, mlir::Value value);
-    std::vector<const Node*> topologicalOrder() const;
+
+    void createConstantTensor(const Tensor* tensor);
+    mlir::Value reshapeTensor(mlir::Value input, llvm::ArrayRef<int64_t> newShape);
+    mlir::Value broadcastBias(mlir::Value bias, llvm::ArrayRef<int64_t> targetShape);
+    mlir::Value createZeroTensor(llvm::ArrayRef<int64_t> shape, mlir::Type elementType);
 
     const ComputationalGraph& graph_;
     Options opts_;
@@ -63,4 +71,4 @@ private:
     std::unordered_map<std::string, mlir::Value> valueMap_;
 };
 
-}
+} // namespace tc

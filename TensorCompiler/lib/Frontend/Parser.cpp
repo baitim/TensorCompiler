@@ -1,9 +1,7 @@
 #include "Common/Errors.hpp"
 #include "Frontend/Parser.hpp"
-#include <execution>
 #include <format>
 #include <fstream>
-#include <mutex>
 #include <span>
 #include <onnx/onnx_pb.h>
 
@@ -77,10 +75,70 @@ void ONNXParser::parse_value_info(ComputationalGraph& graph,
     }
 }
 
+static void fill_tensor_data(Tensor* tensor, const onnx::TensorProto& tensor_proto) {
+    switch (tensor->dtype) {
+        case DataType::FLOAT: {
+            std::vector<float> data;
+            if (tensor_proto.has_raw_data()) {
+                const std::string& raw = tensor_proto.raw_data();
+                const float* ptr = reinterpret_cast<const float*>(raw.data());
+                data.assign(ptr, ptr + raw.size() / sizeof(float));
+            } else {
+                data.reserve(tensor_proto.float_data_size());
+                for (int i = 0; i < tensor_proto.float_data_size(); ++i)
+                    data.push_back(tensor_proto.float_data(i));
+            }
+            tensor->data = std::move(data);
+            break;
+        }
+        case DataType::INT32: {
+            std::vector<int32_t> data;
+            if (tensor_proto.has_raw_data()) {
+                const std::string& raw = tensor_proto.raw_data();
+                const int32_t* ptr = reinterpret_cast<const int32_t*>(raw.data());
+                data.assign(ptr, ptr + raw.size() / sizeof(int32_t));
+            } else {
+                data.reserve(tensor_proto.int32_data_size());
+                for (int i = 0; i < tensor_proto.int32_data_size(); ++i)
+                    data.push_back(tensor_proto.int32_data(i));
+            }
+            tensor->data = std::move(data);
+            break;
+        }
+        case DataType::INT64: {
+            std::vector<int64_t> data;
+            if (tensor_proto.has_raw_data()) {
+                const std::string& raw = tensor_proto.raw_data();
+                const int64_t* ptr = reinterpret_cast<const int64_t*>(raw.data());
+                data.assign(ptr, ptr + raw.size() / sizeof(int64_t));
+            } else {
+                data.reserve(tensor_proto.int64_data_size());
+                for (int i = 0; i < tensor_proto.int64_data_size(); ++i)
+                    data.push_back(tensor_proto.int64_data(i));
+            }
+            tensor->data = std::move(data);
+            break;
+        }
+        case DataType::UINT8: {
+            std::vector<uint8_t> data;
+            if (tensor_proto.has_raw_data()) {
+                const std::string& raw = tensor_proto.raw_data();
+                data.assign(raw.begin(), raw.end());
+            } else {
+                data.reserve(tensor_proto.int32_data_size());
+                for (int i = 0; i < tensor_proto.int32_data_size(); ++i)
+                    data.push_back(static_cast<uint8_t>(tensor_proto.int32_data(i)));
+            }
+            tensor->data = std::move(data);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
-    std::mutex mtx;
-    std::for_each(std::execution::par, onnx_graph.initializer().begin(), onnx_graph.initializer().end(),
-        [&](const onnx::TensorProto& tensor_proto) {
+    for (const auto& tensor_proto : onnx_graph.initializer()) {
         std::string tensor_name = tensor_proto.name();
 
         std::vector<int64_t> shape;
@@ -90,11 +148,11 @@ void ONNXParser::parse_initializers(ComputationalGraph& graph, const onnx::Graph
 
         DataType dtype = convert_onnx_type(tensor_proto.data_type());
 
-        std::lock_guard<std::mutex> lock(mtx);
         Tensor* tensor = graph.create_tensor_with_data(tensor_name, shape, dtype);
+        fill_tensor_data(tensor, tensor_proto);
         tensor->is_initializer = true;
         graph.add_initializer(tensor);
-    });
+    }
 }
 
 void ONNXParser::parse_inputs(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
@@ -154,30 +212,24 @@ void ONNXParser::parse_attributes(Node* node, const onnx::NodeProto& node_proto)
 }
 
 void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& onnx_graph) {
-    std::mutex mtx;
     const auto& nodes = onnx_graph.node();
-    
-    std::for_each(std::execution::par, nodes.begin(), nodes.end(),
-    [&](const onnx::NodeProto& node_proto) {
+    for (int i = 0; i < nodes.size(); ++i) {
+        const onnx::NodeProto& node_proto = nodes.Get(i);
+
         std::string node_name = node_proto.name();
-        if (node_name.empty()) {
-            int index = &node_proto - &nodes[0];
-            node_name = std::format("{}_{}", node_proto.op_type(), index);
-        }
+        if (node_name.empty())
+            node_name = std::format("{}_{}", node_proto.op_type(), i);
 
         std::string op_type_str = node_proto.op_type();
         OpType op_type = convert_op_type(op_type_str);
 
         if (op_type == OpType::UNKNOWN) {
             tc_dbgs << std::format("Warning: Skipping unsupported operation: {}\n", op_type_str);
-            return;
+            continue;
         }
 
-        std::string domain = node_proto.domain();
-
-        std::lock_guard<std::mutex> lock(mtx);
         Node* node = graph.create_node(node_name, op_type);
-        node->domain = domain;
+        node->domain = node_proto.domain();
 
         for (int j = 0; j < node_proto.input_size(); ++j) {
             std::string input_name = node_proto.input(j);
@@ -202,16 +254,15 @@ void ONNXParser::parse_nodes(ComputationalGraph& graph, const onnx::GraphProto& 
         }
 
         parse_attributes(node, node_proto);
-    });
+    }
 }
 
 ComputationalGraph ONNXParser::parse(std::string_view model_path) {
     tc_dbgs << std::format("Parsing ONNX model from: {}\n", model_path);
 
     std::ifstream file(std::string(model_path), std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error(std::format("Failed to open ONNX file: {}", model_path));
-    }
+    if (!file.is_open())
+        throw ErrorONNXParse(std::format("Failed to open ONNX file: {}", model_path));
 
     file.seekg(0, std::ios::end);
     size_t file_size = file.tellg();
@@ -226,9 +277,8 @@ ComputationalGraph ONNXParser::parse(std::string_view model_path) {
 
 ComputationalGraph ONNXParser::parse_from_buffer(std::span<const char> buffer) {
     onnx::ModelProto model;
-    if (!model.ParseFromArray(buffer.data(), static_cast<int>(buffer.size()))) {
-        throw std::runtime_error("Failed to parse ONNX model from buffer");
-    }
+    if (!model.ParseFromArray(buffer.data(), static_cast<int>(buffer.size())))
+        throw ErrorONNXParse("Failed to parse ONNX model from buffer");
 
     const onnx::GraphProto& onnx_graph = model.graph();
     ComputationalGraph graph(onnx_graph.name());

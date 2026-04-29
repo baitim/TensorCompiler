@@ -64,11 +64,23 @@ target_link_libraries(Backend
     MLIR
 )
 
+# --------------- Executor -------------
+
+set(EXECUTOR_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executor)
+add_library(Executor STATIC
+    ${EXECUTOR_LIB_DIR}/Executor.cpp
+)
+target_include_directories(Executor PUBLIC
+    $<BUILD_INTERFACE:${INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(Executor PUBLIC Common)
+
 # -------------- Execution -------------
 
 set(TENSOR_COMPILER_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/TensorCompiler)
 add_executable(tensor-compiler ${TENSOR_COMPILER_LIB_DIR}/TensorCompiler.cpp)
-target_link_libraries(tensor-compiler Frontend Backend)
+target_link_libraries(tensor-compiler Frontend Backend Executor)
 
 # ---------------- Test ----------------
 
